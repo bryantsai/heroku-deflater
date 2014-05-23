@@ -32,6 +32,8 @@ module HerokuDeflater
           puts "compressed_path=#{compressed_path} @assets_path=#{@assets_path} match=#{@file_handler.match?(compressed_path)}"
 
           if compressed_path.start_with?(@assets_path) && (match = @file_handler.match?(compressed_path))
+            puts "serving gzipped version ..."
+
             # Get the FileHandler to serve up the gzipped file, then strip the .gz suffix
             env['PATH_INFO'] = match
             status, headers, body = @file_handler.call(env)
@@ -49,6 +51,7 @@ module HerokuDeflater
             headers['Content-Type'] = Rack::Mime.mime_type(File.extname(env['PATH_INFO']), 'text/plain')
 
             body.close if body.respond_to?(:close)
+            puts "status=#{status}, headers=#{headers}"
             return [status, headers, body]
           end
         end
