@@ -10,19 +10,26 @@ require 'action_dispatch/middleware/static'
 module HerokuDeflater
   class ServeZippedAssets
     def initialize(app, root, assets_path, cache_control=nil)
+      puts "initialize ServeZippedAssets(#{app}, #{root}, #{assets_path}, #{cache_control})"
       @app = app
       @assets_path = assets_path.chomp('/') + '/'
       @file_handler = ActionDispatch::FileHandler.new(root, cache_control)
     end
 
     def call(env)
+      puts "call(#{env}) ..."
       if env['REQUEST_METHOD'] == 'GET'
+        puts "GET request ..."
         request = Rack::Request.new(env)
         encoding = Rack::Utils.select_best_encoding(%w(gzip identity), request.accept_encoding)
+
+        puts "encoding=#{encoding}"
 
         if encoding == 'gzip'
           # See if gzipped version exists in assets directory
           compressed_path = env['PATH_INFO'] + '.gz'
+
+          puts "compressed_path=#{compressed_path} @assets_path=#{@assets_path} match=#{@file_handler.match?(compressed_path)}"
 
           if compressed_path.start_with?(@assets_path) && (match = @file_handler.match?(compressed_path))
             # Get the FileHandler to serve up the gzipped file, then strip the .gz suffix
