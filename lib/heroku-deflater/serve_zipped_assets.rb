@@ -17,7 +17,6 @@ module HerokuDeflater
     end
 
     def call(env)
-      puts "call(#{env}) ..."
       if env['REQUEST_METHOD'] == 'GET'
         puts "GET request ..."
         request = Rack::Request.new(env)
@@ -29,9 +28,11 @@ module HerokuDeflater
           # See if gzipped version exists in assets directory
           compressed_path = env['PATH_INFO'] + '.gz'
 
-          puts "compressed_path=#{compressed_path} @assets_path=#{@assets_path} match=#{@file_handler.match?(compressed_path)}"
+          match = @file_handler.match?(compressed_path)
 
-          if compressed_path.start_with?(@assets_path) && (match = @file_handler.match?(compressed_path))
+          puts "compressed_path=#{compressed_path} @assets_path=#{@assets_path} mm=#{compressed_path.start_with?(@assets_path)} match=#{match}"
+
+          if compressed_path.start_with?(@assets_path) && match
             puts "serving gzipped version ..."
 
             # Get the FileHandler to serve up the gzipped file, then strip the .gz suffix
@@ -58,6 +59,8 @@ module HerokuDeflater
       end
 
       @app.call(env)
+    rescue Exception => e
+      puts "error happened: #{e}"
     end
   end
 end
